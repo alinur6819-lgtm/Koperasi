@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekap Kas</title>
+
+<style>
+  body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f4f6f9;
+}
+header{
+  background:#1e90ff;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header button{
+  background:#ff5252;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:5px;
+}
+.container{
+  padding:20px;
+}
+  
+  
+body{margin:0;font-family:Arial;background:#f4f6f9}
+header{
+  background:#1e90ff;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.container{padding:20px}
+.box{
+  background:white;
+  padding:15px;
+  border-radius:8px;
+  margin-bottom:20px;
+}
+table{
+  font-size:13px;
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+th{background:#eee}
+.summary{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+.summary div{
+  flex:1;
+  background:white;
+  padding:15px;
+  border-radius:8px;
+  text-align:center;
+  font-weight:bold;
+}
+  /* EXPORT BUTTON */
+button{
+  background:#1e90ff;
+  
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  color:white;
+  cursor:pointer;
+}
+  /* MOBILE */
+@media(max-width:600px){
+  .summary{
+    grid-template-columns:1fr;
+  }
+}
+.in{color:green}
+.out{color:red}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h3>Rekap Kas Masuk & Keluar</h3>
+   <div class="nav-right">
+  <div>
+    <button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+  </div>
+   </div>
+</header>
+
+<div class="container">
+
+  <div class="summary">
+    <div class="in">Kas Masuk<br><span id="kasMasuk">Rp 0</span></div>
+    <div class="out">Kas Keluar<br><span id="kasKeluar">Rp 0</span></div>
+    <div>Saldo Kas<br><span id="saldoKas">Rp 0</span></div>
+  </div>
+
+  <div class="box">
+    <h4>📋 Detail Kas</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Keterangan</th>
+          <th>Masuk</th>
+          <th>Keluar</th>
+        </tr>
+      </thead>
+      <tbody id="listKas"></tbody>
+    </table>
+    
+  </div>
+
+
+  <!-- EXPORT -->
+  <button onclick="exportPDF()">📄 Export PDF</button>
+  <button onclick="exportWA()">📲 Export ke WhatsApp</button>
+
+  
+
+<!-- LIBRARY JSPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+
+<script src="https:                                                                        
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script src="js/storage.js"></script>
+<script src="js/kas.js"></script>
+<script>
+  loadKas();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simpanan Koperasi</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+:root{
+  --primary:#1e90ff;
+  --primary2:#4facfe;
+  --success:#2ecc71;
+  --danger:#ff5252;
+  --bg:#f2f4f8;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,var(--primary),var(--primary2));
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
+}
+
+header h3{margin:0;font-size:16px}
+
+header button{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{padding:15px}
+
+/* FILTER */
+.container select{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+/* BUTTON */
+.container button{
+  width:100%;
+  background:var(--primary);
+  border:none;
+  color:white;
+  padding:10px;
+  border-radius:10px;
+  font-weight:bold;
+  margin:8px 0;
+}
+
+/* TABLE CARD */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+  font-size:13px;
+}
+
+th{
+  background:#f1f5f9;
+  padding:10px;
+}
+
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+}
+
+tbody tr:nth-child(even){
+  background:#fafafa;
+}
+
+/* DELETE BTN */
+td button{
+  background:#ff5252;
+  border:none;
+  border-radius:6px;
+  color:white;
+  padding:4px 8px;
+}
+
+/* TOTAL */
+.total{
+  margin-top:12px;
+  background:linear-gradient(135deg,#2ecc71,#27ae60);
+  color:white;
+  padding:12px;
+  border-radius:12px;
+  font-weight:bold;
+  text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  th,td{font-size:12px}
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h3>LAPORAN SIMPANAN KOPERASI</h3>
+    <div>
+    <button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+  </div>
+</header>
+
+<hr>
+
+<div class="container">
+  <select id="anggota"></select>
+<select id="filterAnggota" onchange="loadSimpanan()"></select>
+
+<select id="filterJenis" onchange="loadSimpanan()">
+<option value="">-- Semua Jenis --</option>
+<option value="Pokok">Pokok</option>
+<option value="Wajib">Wajib</option>
+<option value="Sukarela">Sukarela</option>
+</select>
+
+<button onclick="exportPDF()">PDF</button>
+
+<table>
+<thead>
+<tr>
+<th>Tanggal</th>
+<th>Anggota</th>
+<th>Jenis</th>
+<th>Jumlah</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody id="listSimpanan"></tbody>
+</table>
+
+<div class="total" id="total"></div>
+
+</div>
+
+<script>
+
+let lastFiltered=[];
+
+/* STORAGE */
+function getDB(){
+ return JSON.parse(localStorage.getItem("koperasi_db")) || {
+  anggota:[
+   {id:"AG001",nama:"Ali"},
+   {id:"AG002",nama:"Budi"}
+  ],
+  simpanan:[]
+ };
+}
+
+function saveDB(db){
+ localStorage.setItem("koperasi_db",JSON.stringify(db));
+}
+
+/* LOAD ANGGOTA */
+function loadAnggota(){
+ const db=getDB();
+ anggota.innerHTML="";
+ filterAnggota.innerHTML="<option value=''>-- Semua Anggota --</option>";
+
+ db.anggota.forEach(a=>{
+  anggota.innerHTML+=`<option value="${a.id}">${a.nama}</option>`;
+  filterAnggota.innerHTML+=`<option value="${a.id}">${a.nama}</option>`;
+ });
+}
+
+/* SIMPAN */
+function simpanSimpanan(e){
+ e.preventDefault();
+
+ const db=getDB();
+
+ db.simpanan.push({
+  anggota_id:anggota.value,
+  jenis:jenis.value,
+  jumlah:Number(jumlah.value),
+  tanggal:tanggal.value
+ });
+
+ saveDB(db);
+ e.target.reset();
+ loadSimpanan();
+}
+
+/* LOAD SIMPANAN */
+function loadSimpanan(){
+
+ const db=getDB();
+ listSimpanan.innerHTML="";
+ total.innerHTML="";
+ let sum=0;
+
+ lastFiltered=db.simpanan.filter(s=>{
+  return (!filterAnggota.value||s.anggota_id===filterAnggota.value)&&
+         (!filterJenis.value||s.jenis===filterJenis.value);
+ });
+
+ lastFiltered.forEach((s,i)=>{
+  const a=db.anggota.find(x=>x.id===s.anggota_id);
+  sum+=Number(s.jumlah);
+
+  listSimpanan.innerHTML+=`
+  <tr>
+   <td>${s.tanggal}</td>
+   <td>${a?a.nama:""}</td>
+   <td>${s.jenis}</td>
+   <td>Rp ${s.jumlah.toLocaleString("id-ID")}</td>
+   <td><button onclick="hapus(${i})">🗑️</button></td>
+  </tr>`;
+ });
+
+ total.innerHTML="Total : Rp "+sum.toLocaleString("id-ID");
+}
+
+/* HAPUS */
+function hapus(i){
+ const db=getDB();
+ db.simpanan.splice(i,1);
+ saveDB(db);
+ loadSimpanan();
+}
+
+/* PDF */
+function exportPDF(){
+
+ if(lastFiltered.length===0){
+  alert("Data kosong");
+  return;
+ }
+
+ const db=getDB();
+ let total=0;
+
+ const temp=document.createElement("div");
+ document.body.appendChild(temp);
+
+ let html=`<h3 style="text-align:center">LAPORAN SIMPANAN</h3>
+ <table style="width:100%;border-collapse:collapse;font-size:11px">
+ <tr><th>Tanggal</th><th>Anggota</th><th>Jenis</th><th>Jumlah</th></tr>`;
+
+ lastFiltered.forEach(s=>{
+  const a=db.anggota.find(x=>x.id===s.anggota_id);
+  total+=Number(s.jumlah);
+
+  html+=`<tr>
+  <td>${s.tanggal}</td>
+  <td>${a?a.nama:""}</td>
+  <td>${s.jenis}</td>
+  <td>Rp ${s.jumlah.toLocaleString("id-ID")}</td>
+  </tr>`;
+ });
+
+ html+=`<tr>
+ <td colspan="3"><b>TOTAL</b></td>
+ <td><b>Rp ${total.toLocaleString("id-ID")}</b></td>
+ </tr></table>`;
+
+ temp.innerHTML=html;
+
+ setTimeout(()=>{
+ html2pdf().from(temp).save("laporan_simpanan.pdf")
+ .then(()=>temp.remove());
+ },300);
+
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded",()=>{
+ loadAnggota();
+ loadSimpanan();
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Pinjaman Per Anggota</title>
+
+<style>
+
+:root{
+  --primary:#1e90ff;
+  --danger:#ff5252;
+  --success:#2ecc71;
+  --bg:#f2f4f8;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+}
+
+/* HEADER */
+header{
+  background:linear-gradient(135deg,#1e90ff,#4facfe);
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+header h3{margin:0;font-size:18px}
+
+header button{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{padding:15px}
+
+/* CARD */
+.box{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+
+/* FORM */
+label{font-weight:bold}
+
+select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ddd;
+}
+
+/* BUTTON */
+button.export{
+  width:100%;
+  border:none;
+  color:white;
+  padding:10px;
+  border-radius:8px;
+  margin-top:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button.export:nth-child(3){background:var(--primary)}
+button.export:nth-child(4){background:#25D366}
+
+button.export:hover{opacity:.85}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  font-size:13px;
+}
+
+th{
+  background:#f1f5f9;
+  padding:10px;
+}
+
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+}
+
+tbody tr:nth-child(even){
+  background:#fafafa;
+}
+
+.in{color:var(--success);font-weight:bold}
+.out{color:#e74c3c;font-weight:bold}
+
+/* TOTAL AREA */
+.
+</style>
+
+<!-- JSPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+</head>
+<body>
+
+<header>
+  <h3>📄 Laporan Pinjaman & Angsuran</h3>
+  <button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+</header>
+
+<div class="container">
+
+  <!-- PILIH ANGGOTA -->
+  <div class="box">
+    <label>Pilih Anggota</label>
+    <select id="pilihAnggota" onchange="loadLaporan()">
+      <option value="">-- Pilih Nama --</option>
+    </select>
+    <button class="export" onclick="exportPDF()">📄 Export PDF</button>
+    <button class="export" onclick="exportWA()">📲 Export ke WhatsApp</button>
+  </div>
+
+  <!-- TABEL LAPORAN -->
+  <div class="box">
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Keterangan</th>
+          <th>Pinjaman</th>
+          <th>Bayar</th>
+        </tr>
+      </thead>
+      <tbody id="listLaporan"></tbody>
+    </table>
+
+    <div class="total">
+      Total Pinjaman : <span id="totalPinjaman">Rp 0</span><br>
+      Total Bayar : <span id="totalBayar">Rp 0</span><br>
+      Sisa Pinjaman : <span id="sisaPinjaman">Rp 0</span><br>
+      Status : <span id="statusPinjaman">-</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+cekLogin();
+
+/* ===== FORMAT RUPIAH ===== */
+function rupiah(n){
+  return "Rp " + Number(n||0).toLocaleString("id-ID");
+}
+
+/* ===== AMBIL NAMA ANGGOTA ===== */
+function loadAnggota(){
+  const db = getDB();
+  const select = document.getElementById("pilihAnggota");
+  select.innerHTML = `<option value="">-- Pilih Nama --</option>`;
+
+  db.anggota.forEach(a=>{
+    if(a.nama){
+      const opt = document.createElement("option");
+      opt.value = a.nama;
+      opt.textContent = a.nama;
+      select.appendChild(opt);
+    }
+  });
+}
+
+/* ===== LOAD LAPORAN PINJAMAN & ANGSURAN ===== */
+function loadLaporan(){
+  const nama = document.getElementById("pilihAnggota").value;
+  const tbody = document.getElementById("listLaporan");
+  const db = getDB();
+
+  tbody.innerHTML = "";
+  if(!nama) return;
+
+  let totalPinjaman = 0;
+  let totalBayar = 0;
+
+  /* PINJAMAN */
+  db.pinjaman
+    .filter(p=>p.nama===nama)
+    .forEach(p=>{
+      totalPinjaman += Number(p.jumlah);
+      tbody.innerHTML += `
+        <tr>
+          <td>${p.tanggal || "-"}</td>
+          <td>Pinjaman</td>
+          <td class="out">${rupiah(p.jumlah)}</td>
+          <td>-</td>
+        </tr>
+      `;
+    });
+
+  /* ANGSURAN */
+  db.transaksi
+    .filter(t=>{
+      const pin = db.pinjaman.find(p=>p.id===t.pinjamanId);
+      return pin && pin.nama===nama && t.jenis==="BAYAR";
+    })
+    .forEach(t=>{
+      totalBayar += Number(t.jumlah);
+      tbody.innerHTML += `
+        <tr>
+          <td>${t.tanggal || "-"}</td>
+          <td>Angsuran</td>
+          <td>-</td>
+          <td class="in">${rupiah(t.jumlah)}</td>
+        </tr>
+      `;
+    });
+
+  const sisa = totalPinjaman - totalBayar;
+
+  document.getElementById("totalPinjaman").innerText = rupiah(totalPinjaman);
+  document.getElementById("totalBayar").innerText = rupiah(totalBayar);
+  document.getElementById("sisaPinjaman").innerText = rupiah(sisa);
+
+  const statusEl = document.getElementById("statusPinjaman");
+  if(sisa <=0 && totalPinjaman>0){
+    statusEl.innerText = "LUNAS";
+    statusEl.style.color="green";
+  } else if(totalPinjaman>0){
+    statusEl.innerText = "BELUM LUNAS";
+    statusEl.style.color="red";
+  } else {
+    statusEl.innerText = "-";
+    statusEl.style.color="black";
+  }
+}
+
+/* ===== EXPORT PDF ===== */
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const nama = document.getElementById("pilihAnggota").value;
+  if(!nama){ alert("Pilih anggota terlebih dahulu!"); return; }
+
+  doc.setFontSize(14);
+  doc.text(`Laporan Pinjaman & Angsuran - ${nama}`, 14, 20);
+
+  const totalPin = document.getElementById("totalPinjaman").innerText;
+  const totalBay = document.getElementById("totalBayar").innerText;
+  const sisa = document.getElementById("sisaPinjaman").innerText;
+  const status = document.getElementById("statusPinjaman").innerText;
+
+  doc.setFontSize(12);
+  doc.text(`Total Pinjaman: ${totalPin}`, 14, 30);
+  doc.text(`Total Bayar: ${totalBay}`, 14, 38);
+  doc.text(`Sisa Pinjaman: ${sisa}`, 14, 46);
+  doc.text(`Status: ${status}`, 14, 54);
+
+  const rows = [];
+  document.querySelectorAll("#listLaporan tr").forEach(tr=>{
+    const cols = tr.querySelectorAll("td");
+    rows.push([cols[0].innerText, cols[1].innerText, cols[2].innerText, cols[3].innerText]);
+  });
+
+  doc.autoTable({
+    startY: 60,
+    head:[["Tanggal","Keterangan","Pinjaman","Bayar"]],
+    body: rows,
+    theme:"grid",
+    headStyles:{fillColor:[30,144,255],textColor:255},
+    styles:{cellPadding:3}
+  });
+
+  doc.save(`Laporan_Pinjaman_${nama}.pdf`);
+}
+
+/* ===== EXPORT WA ===== */
+function exportWA(){
+  const nama = document.getElementById("pilihAnggota").value;
+  if(!nama){ alert("Pilih anggota terlebih dahulu!"); return; }
+
+  let text = `Laporan Pinjaman & Angsuran - ${nama}\n\n`;
+  text += `Total Pinjaman: ${document.getElementById("totalPinjaman").innerText}\n`;
+  text += `Total Bayar: ${document.getElementById("totalBayar").innerText}\n`;
+  text += `Sisa Pinjaman: ${document.getElementById("sisaPinjaman").innerText}\n`;
+  text += `Status: ${document.getElementById("statusPinjaman").innerText}\n\n`;
+  text += "Tanggal | Keterangan | Pinjaman | Bayar\n";
+
+  document.querySelectorAll("#listLaporan tr").forEach(tr=>{
+    const tds = tr.querySelectorAll("td");
+    text += `${tds[0].innerText} | ${tds[1].innerText} | ${tds[2].innerText} | ${tds[3].innerText}\n`;
+  });
+
+  const waLink = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(waLink,'_blank');
+}
+
+/* ===== INIT ===== */
+loadAnggota();
+</script>
+
+</body>
+</html>

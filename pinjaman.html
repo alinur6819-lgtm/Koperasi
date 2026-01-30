@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinjaman & Angsuran Plus</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f4f6f9;
+}
+
+/* HEADER */
+header{
+  background:#1e90ff;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+header button{
+  background:#ff5252;
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  padding:15px;
+}
+
+/* TAB */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.tabs button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#ddd;
+  cursor:pointer;
+}
+
+.tabs button.active{
+  background:#1e90ff;
+  color:white;
+}
+
+/* CONTENT */
+.tabcontent{
+  display:none;
+}
+
+/* FORM & TABLE */
+form,
+.table-wrapper{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+}
+
+/* INPUT */
+form input,
+form select{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+/* BUTTON */
+form button{
+  background:#1e90ff;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:6px;
+  margin-top:5px;
+}
+
+/* TABLE */
+.table-wrapper{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:650px;
+}
+
+th,td{
+  padding:10px;
+  border:1px solid #ddd;
+  text-align:center;
+  font-size:13px;
+}
+
+th{
+  background:#f0f0f0;
+}
+
+h4{
+  margin:10px 0;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  header h3{
+    font-size:16px;
+  }
+
+  th,td{
+    font-size:12px;
+    padding:8px;
+  }
+
+  .tabs button{
+    padding:8px;
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+<h3>📌 Pinjaman & Angsuran</h3>
+<div>
+<button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+
+</div>
+</header>
+
+<div class="container">
+
+<!-- TAB -->
+<div class="tabs">
+<button class="tablink active" onclick="openTab('pinjaman')">Pinjaman</button>
+<button class="tablink" onclick="openTab('bayar')">Bayar Angsuran</button>
+</div>
+
+<!-- TAB PINJAMAN -->
+  <div id="pinjaman" class="tabcontent" style="display:block">
+  <form onsubmit="simpanPinjaman(event)">
+  <h4>📌 Tambah Pinjaman</h4>
+  <select id="anggotaPinjam" required>
+  <option value="">-- Pilih Anggota --</option>
+  </select>
+<input type="number" id="jumlahPinjam" placeholder="Jumlah Pinjaman" required>
+<input type="number" id="bungaPinjam" placeholder="Bunga (%) / bulan" required>
+<input type="number" id="tenorPinjam" placeholder="Tenor (bulan)" required>
+<input type="text" id="angsuranPinjam" placeholder="Angsuran / bulan" readonly>
+<button type="submit">💾 Simpan Pinjaman</button>
+</form>
+
+<h4>📋 Daftar Pinjaman</h4>
+
+<label>Filter Anggota / Bulan</label>
+<select id="filterAnggotaPinjam" onchange="loadPinjaman()">
+<option value="">-- Semua Anggota --</option>
+</select>
+<input type="month" id="filterBulanPinjam" onchange="loadPinjaman()">
+
+<table>
+<thead>
+<tr>
+<th>Anggota</th><th>Pinjaman</th><th>Bunga</th><th>Tenor</th><th>Total Bayar</th><th>Sisa</th><th>Status</th>
+</tr>
+</thead>
+<tbody id="listPinjaman"></tbody>
+</table>
+<button onclick="exportPinjamanPDF()">📄 Export PDF</button>
+</div>
+
+<!-- TAB BAYAR -->
+<div id="bayar" class="tabcontent">
+<form onsubmit="simpanAngsuran(event)">
+<h4>💰 Bayar Angsuran</h4>
+<select id="anggotaBayar" onchange="loadPinjamanDropdown()" required>
+<option value="">-- Pilih Anggota --</option>
+</select>
+<select id="pinjamanBayar" required>
+<option value="">-- Pilih Pinjaman --</option>
+</select>
+<input type="number" id="jumlahBayar" placeholder="Jumlah Bayar" required>
+<button type="submit">💾 Simpan Angsuran</button>
+</form>
+
+<h4>📋 Daftar Bayar Angsuran</h4>
+<select id="filterAnggotaBayar" onchange="loadBayar()">
+<option value="">-- Semua Anggota --</option>
+</select>
+<input type="month" id="filterBulanBayar" onchange="loadBayar()">
+
+<table>
+<thead>
+<tr>
+<th>Anggota</th><th>Pinjaman</th><th>Jumlah Bayar</th><th>Tanggal</th>
+</tr>
+</thead>
+<tbody id="listBayar"></tbody>
+</table>
+<button onclick="exportBayarPDF()">📄 Export PDF</button>
+</div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script>
+cekLogin();
+
+/* ===================== TAB ===================== */
+function openTab(tab){
+document.querySelectorAll('.tabcontent').forEach(t=>t.style.display='none');
+document.querySelectorAll('.tablink').forEach(b=>b.classList.remove('active'));
+document.getElementById(tab).style.display='block';
+event.currentTarget.classList.add('active');
+}
+
+/* ===================== UTILS ===================== */
+function rupiah(n){ return "Rp " + Number(n||0).toLocaleString("id-ID"); }
+function logout(){ if(confirm("Yakin ingin logout?")){ localStorage.removeItem("login"); location.href="login.html"; } }
+
+/* ===================== LOAD ANGGOTA ===================== */
+function loadAnggotaDropdowns(){
+const db=getDB();
+['anggotaPinjam','filterAnggotaPinjam','anggotaBayar','filterAnggotaBayar'].forEach(id=>{
+const sel=document.getElementById(id);
+sel.innerHTML=`<option value="">-- Pilih Anggota --</option>`;
+db.anggota.forEach(a=>{
+const opt=document.createElement("option");
+opt.value=a.nama;
+opt.textContent=a.nama;
+sel.appendChild(opt);
+});
+});
+}
+
+/* ===================== HITUNG ANGSURAN ===================== */
+document.getElementById("jumlahPinjam").addEventListener("input",hitungAngsuran);
+document.getElementById("bungaPinjam").addEventListener("input",hitungAngsuran);
+document.getElementById("tenorPinjam").addEventListener("input",hitungAngsuran);
+
+function hitungAngsuran(){
+const jml=Number(document.getElementById("jumlahPinjam").value||0);
+const bunga=Number(document.getElementById("bungaPinjam").value||0);
+const tenor=Number(document.getElementById("tenorPinjam").value||0);
+if(jml && bunga && tenor){
+const totalBunga=jml*bunga*tenor/100;
+const total=jml+totalBunga;
+document.getElementById("angsuranPinjam").value=rupiah(Math.ceil(total/tenor));
+}else{ document.getElementById("angsuranPinjam").value=""; }
+}
+
+/* ===================== SIMPAN PINJAMAN ===================== */
+function simpanPinjaman(e){
+e.preventDefault();
+const db=getDB(); if(!db.pinjaman) db.pinjaman=[];
+const nama=document.getElementById("anggotaPinjam").value;
+const jumlah=Number(document.getElementById("jumlahPinjam").value);
+const bunga=Number(document.getElementById("bungaPinjam").value);
+const tenor=Number(document.getElementById("tenorPinjam").value);
+const totalBunga=jumlah*bunga*tenor/100;
+const totalPinjaman=jumlah+totalBunga;
+const angsuran=Math.ceil(totalPinjaman/tenor);
+db.pinjaman.push({id:Date.now(),nama,jumlah,bunga,tenor,totalPinjaman,angsuran,sisa:totalPinjaman,tanggal:new Date().toISOString().slice(0,10)});
+saveDB(db); document.querySelector("form").reset(); loadPinjaman(); alert("Pinjaman berhasil ditambahkan!"); loadAnggotaDropdowns();
+}
+
+/* ===================== SIMPAN ANGSURAN ===================== */
+function simpanAngsuran(e){
+e.preventDefault();
+const db=getDB(); if(!db.transaksi) db.transaksi=[];
+const nama=document.getElementById("anggotaBayar").value;
+const pinjamanId=Number(document.getElementById("pinjamanBayar").value);
+const bayar=Number(document.getElementById("jumlahBayar").value);
+const pin=db.pinjaman.find(p=>p.id===pinjamanId);
+if(!pin) return alert("Pinjaman tidak ditemukan");
+pin.sisa-=bayar; if(pin.sisa<0) pin.sisa=0;
+db.transaksi.push({id:Date.now(),nama,pinjamanId,jumlah:bayar,jenis:"BAYAR",tanggal:new Date().toISOString().slice(0,10)});
+saveDB(db); document.querySelector("form").reset(); loadPinjaman(); loadBayar(); alert("Angsuran berhasil dicatat!"); loadPinjamanDropdown();
+}
+
+/* ===================== DROPDOWN PINJAMAN BAYAR ===================== */
+function loadPinjamanDropdown(){
+const db=getDB();
+const anggota=document.getElementById("anggotaBayar").value;
+const sel=document.getElementById("pinjamanBayar");
+sel.innerHTML=`<option value="">-- Pilih Pinjaman --</option>`;
+db.pinjaman.filter(p=>p.nama===anggota && p.sisa>0).forEach(p=>{
+const opt=document.createElement("option");
+opt.value=p.id;
+opt.textContent=`${p.nama} - Sisa ${rupiah(p.sisa)}`;
+sel.appendChild(opt);
+});
+}
+
+/* ===================== LOAD TABEL PINJAMAN ===================== */
+function loadPinjaman(){
+const db=getDB();
+const tbody=document.getElementById("listPinjaman");
+const filterNama=document.getElementById("filterAnggotaPinjam").value;
+const filterBulan=document.getElementById("filterBulanPinjam").value;
+tbody.innerHTML="";
+db.pinjaman.forEach(p=>{
+if(filterNama && p.nama!==filterNama) return;
+if(filterBulan && !p.tanggal.startsWith(filterBulan)) return;
+let totalBayar=db.transaksi.filter(t=>t.pinjamanId===p.id && t.jenis==="BAYAR").reduce((a,b)=>a+Number(b.jumlah),0);
+let sisa=p.totalPinjaman-totalBayar;
+let status=sisa<=0?"LUNAS":"BELUM LUNAS";
+tbody.innerHTML+=`<tr>
+<td>${p.nama}</td><td>${rupiah(p.totalPinjaman)}</td><td>${p.bunga}%</td><td>${p.tenor} bln</td>
+<td>${rupiah(totalBayar)}</td><td>${rupiah(sisa)}</td>
+<td style="color:${status==="LUNAS"?"green":"red"}">${status}</td></tr>`;
+});
+}
+
+/* ===================== LOAD TABEL BAYAR ===================== */
+function loadBayar(){
+const db=getDB();
+const tbody=document.getElementById("listBayar");
+const filterNama=document.getElementById("filterAnggotaBayar").value;
+const filterBulan=document.getElementById("filterBulanBayar").value;
+tbody.innerHTML="";
+db.transaksi.filter(t=>t.jenis==="BAYAR").forEach(t=>{
+const pin=db.pinjaman.find(p=>p.id===t.pinjamanId);
+if(!pin) return;
+if(filterNama && t.nama!==filterNama) return;
+if(filterBulan && !t.tanggal.startsWith(filterBulan)) return;
+tbody.innerHTML+=`<tr>
+<td>${t.nama}</td><td>${pin.totalPinjaman}</td><td>${rupiah(t.jumlah)}</td><td>${t.tanggal}</td></tr>`;
+});
+}
+
+/* ===================== EXPORT PDF ===================== */
+
+function exportPinjamanPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p","mm","a4");
+
+  doc.setFontSize(16);
+  doc.text("DAFTAR PINJAMAN",14,15);
+
+  let body = [];
+
+  document.querySelectorAll("#listPinjaman tr").forEach(tr=>{
+    const td = tr.querySelectorAll("td");
+    body.push([
+      td[0]?.innerText || "",
+      td[1]?.innerText || "",
+      td[2]?.innerText || "",
+      td[3]?.innerText || "",
+      td[4]?.innerText || "",
+      td[5]?.innerText || "",
+      td[6]?.innerText || ""
+    ]);
+  });
+
+  doc.autoTable({
+    startY: 25,
+    head: [[
+      "Anggota",
+      "Pinjaman",
+      "Bunga",
+      "Tenor",
+      "Total Bayar",
+      "Sisa",
+      "Status"
+    ]],
+    body: body,
+    styles:{
+      fontSize:9,
+      cellPadding:2
+    },
+    headStyles:{
+      fillColor:[220,220,220],
+      textColor:0
+    }
+  });
+
+  doc.save("pinjaman.pdf");
+}
+  
+  
+function exportBayarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p","mm","a4");
+
+  doc.setFontSize(16);
+  doc.text("DAFTAR BAYAR ANGSURAN",14,15);
+
+  let body = [];
+
+  document.querySelectorAll("#listBayar tr").forEach(tr=>{
+    const td = tr.querySelectorAll("td");
+    body.push([
+      td[0]?.innerText || "",
+      td[1]?.innerText || "",
+      td[2]?.innerText || "",
+      td[3]?.innerText || ""
+    ]);
+  });
+
+  doc.autoTable({
+    startY: 25,
+    head: [[
+      "Anggota",
+      "Pinjaman",
+      "Jumlah Bayar",
+      "Tanggal"
+    ]],
+    body: body,
+    styles:{
+      fontSize:10,
+      cellPadding:3
+    },
+    headStyles:{
+      fillColor:[220,220,220],
+      textColor:0
+    }
+  });
+
+  doc.save("bayar.pdf");
+}
+/* ===================== INIT ===================== */
+loadAnggotaDropdowns(); loadPinjaman(); loadBayar(); loadPinjamanDropdown();
+</script>
+</body>
+</html>

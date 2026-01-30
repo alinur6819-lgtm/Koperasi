@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Simpanan</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f4f6f9;
+}
+header{
+  background:#1e90ff;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header button{
+  background:#ff5252;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:5px;
+}
+.container{
+  padding:15px;
+}
+form{
+  background:white;
+  padding:28px;
+  border-radius:8px;
+  margin-bottom:20px;
+}
+form select, form input{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+}
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  font-size:10px;
+}
+  button{
+  background:#1e90ff;
+  
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  color:white;
+  cursor:pointer;
+}
+  /* MOBILE */
+@media(max-width:600px){
+  .summary{
+    grid-template-columns:1fr;
+  }
+}
+
+th{
+  background:#f1f5f9;
+  padding:10px;
+}
+
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+}
+th, td{
+  padding:10px;
+  border:1px solid #ddd;
+  text-align:center;
+}
+th{
+  background:#eee;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h3>Data Simpanan</h3>
+  <div>
+    <button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <form onsubmit="simpanSimpanan(event)">
+    <select id="anggota" required></select>
+
+    <select id="jenis">
+      <option value="Pokok">Simpanan Pokok</option>
+      <option value="Wajib">Simpanan Wajib</option>
+      <option value="Sukarela">Simpanan Sukarela</option>
+    </select>
+
+    <input type="number" id="jumlah" placeholder="Jumlah Simpanan" required>
+    <input type="date" id="tanggal" required>
+
+    <button type="submit">💾 Simpan</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Anggota</th>
+        <th>Jenis</th>
+        <th>Jumlah</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="listSimpanan"></tbody>
+  </table>
+
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/simpanan.js"></script>
+<script>
+  cekLogin();
+  loadAnggota();
+  loadSimpanan();
+</script>
+
+</body>
+</html>

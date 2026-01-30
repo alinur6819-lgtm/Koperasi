@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Kas Manual</title>
+ 
+<!DOCTYPE html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+ header{
+  background:#1e90ff;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header button{
+  background:#ff5252;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:5px;
+}
+.container{
+  padding:20px;
+}
+body{font-family:Arial;background:#f4f6f9;margin:0}
+header{background:#1e90ff;color:white;padding:15px;text-align:center}
+.container{padding:15px}
+input,select,button{padding:6px;margin:3px}
+button{background:#1e90ff;color:white;border:none;border-radius:4px}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:white}
+th,td{border:1px solid #ccc;padding:6px;font-size:13px}
+th{background:#1e90ff;color:white}
+.summary{background:white;padding:10px;margin-top:10px;border-radius:5px}
+</style>
+</head>
+
+<body onload="loadKas()">
+
+
+ <header>
+    <h3>Input Kas manual</h3>
+   <div>
+   <button onclick="location.href='dashboard.html'">⬅ Dashboard</button>
+  </div>
+ </header>
+
+<div class="container">
+
+<h4>Input Kas Manual</h4>
+
+<input type="date" id="kasTanggal">
+<input type="text" id="kasKet" placeholder="Keterangan">
+<select id="kasJenis">
+<option value="MASUK">Kas Masuk</option>
+<option value="KELUAR">Kas Keluar</option>
+</select>
+<input type="number" id="kasJumlah" placeholder="Jumlah">
+<button onclick="simpanKasManual()">Simpan</button>
+
+<div class="summary">
+Kas Masuk : <b id="kasMasuk">Rp 0</b><br>
+Kas Keluar : <b id="kasKeluar">Rp 0</b><br>
+Saldo Kas : <b id="saldoKas">Rp 0</b>
+</div>
+
+<button onclick="exportPDF()">Export PDF</button>
+<button onclick="exportWA()">Share WA</button>
+
+<table>
+<thead>
+<tr>
+<th>Tanggal</th>
+<th>Keterangan</th>
+<th>Masuk</th>
+<th>Keluar</th>
+</tr>
+</thead>
+<tbody id="listKas"></tbody>
+</table>
+
+</div>
+
+<script>
+/* ================= DB ================= */
+function getDB(){
+ let db = JSON.parse(localStorage.getItem("koperasi_db"));
+ if(!db){
+  db={
+   simpanan:[],
+   transaksi:[],
+   pinjaman:[],
+   kas_manual:[]
+  };
+  localStorage.setItem("koperasi_db",JSON.stringify(db));
+ }
+ if(!db.kas_manual) db.kas_manual=[];
+ return db;
+}
+
+function rupiah(n){
+ return "Rp "+Number(n||0).toLocaleString("id-ID");
+}
+
+/* ================= SIMPAN MANUAL ================= */
+function simpanKasManual(){
+ const db=getDB();
+
+ const data={
+  tanggal:kasTanggal.value,
+  ket:kasKet.value,
+  jenis:kasJenis.value,
+  jumlah:kasJumlah.value
+ };
+
+ if(!data.tanggal||!data.jumlah){
+  alert("Lengkapi data!");
+  return;
+ }
+
+ db.kas_manual.push(data);
+ localStorage.setItem("koperasi_db",JSON.stringify(db));
+
+ kasKet.value="";
+ kasJumlah.value="";
+
+ loadKas();
+}
+
+/* ================= LOAD KAS ================= */
+function loadKas(){
+ const db=getDB();
+ const tbody=document.getElementById("listKas");
+ let kasMasuk=0;
+ let kasKeluar=0;
+ tbody.innerHTML="";
+
+ /* SIMPANAN */
+ db.simpanan.forEach(s=>{
+  kasMasuk+=Number(s.jumlah);
+  tbody.innerHTML+=`
+   <tr>
+    <td>${s.tanggal||""}</td>
+    <td>Simpanan</td>
+    <td>${rupiah(s.jumlah)}</td>
+    <td>-</td>
+   </tr>`;
+ });
+
+ /* ANGSURAN */
+ db.transaksi.filter(t=>t.jenis==="BAYAR").forEach(t=>{
+  kasMasuk+=Number(t.jumlah);
+  tbody.innerHTML+=`
+   <tr>
+    <td>${t.tanggal||""}</td>
+    <td>Angsuran</td>
+    <td>${rupiah(t.jumlah)}</td>
+    <td>-</td>
+   </tr>`;
+ });
+
+ /* PINJAMAN */
+ db.pinjaman.forEach(p=>{
+  kasKeluar+=Number(p.jumlah);
+  tbody.innerHTML+=`
+   <tr>
+    <td>${p.tanggal||""}</td>
+    <td>Pencairan Pinjaman</td>
+    <td>-</td>
+    <td>${rupiah(p.jumlah)}</td>
+   </tr>`;
+ });
+
+ /* KAS MANUAL */
+ db.kas_manual.forEach(k=>{
+  if(k.jenis==="MASUK"){
+   kasMasuk+=Number(k.jumlah);
+   tbody.innerHTML+=`
+    <tr>
+     <td>${k.tanggal}</td>
+     <td>${k.ket}</td>
+     <td>${rupiah(k.jumlah)}</td>
+     <td>-</td>
+    </tr>`;
+  }else{
+   kasKeluar+=Number(k.jumlah);
+   tbody.innerHTML+=`
+    <tr>
+     <td>${k.tanggal}</td>
+     <td>${k.ket}</td>
+     <td>-</td>
+     <td>${rupiah(k.jumlah)}</td>
+    </tr>`;
+  }
+ });
+
+ kasMasuk.innerText=rupiah(kasMasuk);
+ kasKeluar.innerText=rupiah(kasKeluar);
+ saldoKas.innerText=rupiah(kasMasuk-kasKeluar);
+}
+
+/* ================= PDF ================= */
+function exportPDF(){
+ const {jsPDF}=window.jspdf;
+ const doc=new jsPDF();
+
+ doc.text("Rekap Kas",14,15);
+ doc.text("Kas Masuk : "+kasMasuk.innerText,14,25);
+ doc.text("Kas Keluar : "+kasKeluar.innerText,14,32);
+ doc.text("Saldo : "+saldoKas.innerText,14,39);
+
+ const rows=[];
+ document.querySelectorAll("#listKas tr").forEach(tr=>{
+  const r=[];
+  tr.querySelectorAll("td").forEach(td=>r.push(td.innerText));
+  rows.push(r);
+ });
+
+ doc.autoTable({
+  startY:45,
+  head:[["Tanggal","Ket","Masuk","Keluar"]],
+  body:rows
+ });
+
+ doc.save("rekap_kas.pdf");
+}
+
+/* ================= WA ================= */
+function exportWA(){
+ let text="Rekap Kas\n";
+ text+="Masuk: "+kasMasuk.innerText+"\n";
+ text+="Keluar: "+kasKeluar.innerText+"\n";
+ text+="Saldo: "+saldoKas.innerText+"\n\n";
+
+ document.querySelectorAll("#listKas tr").forEach(tr=>{
+  const td=tr.querySelectorAll("td");
+  text+=`${td[0].innerText} | ${td[1].innerText} | ${td[2].innerText} | ${td[3].innerText}\n`;
+ });
+
+ window.open("https://wa.me/?text="+encodeURIComponent(text));
+}
+</script>
+
+</body>
+</html>

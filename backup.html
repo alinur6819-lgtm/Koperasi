@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backup & Restore</title>
+
+<style>
+:root{
+  --primary:#1e90ff;
+  --danger:#ff5252;
+  --bg:#f4f6f9;
+  --card:#ffffff;
+  --text:#333;
+  --border:#e0e0e0;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+}
+
+/* HEADER */
+header{
+  background:var(--primary);
+  color:white;
+  padding:14px 16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+header h2{
+  margin:0;
+  font-size:18px;
+}
+
+header button{
+  background:var(--danger);
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+/* CONTAINER */
+.container{
+  padding:20px;
+  display:flex;
+  justify-content:center;
+}
+
+/* CARD */
+.card{
+  background:var(--card);
+  width:100%;
+  max-width:420px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  padding:20px;
+  text-align:center;
+}
+
+.card h3{
+  margin-top:0;
+  font-size:16px;
+}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  font-size:14px;
+  border:none;
+  border-radius:10px;
+  background:var(--primary);
+  color:white;
+  cursor:pointer;
+}
+
+.btn:hover{
+  opacity:.9;
+}
+
+/* FILE INPUT */
+.file-box{
+  border:2px dashed var(--border);
+  border-radius:10px;
+  padding:15px;
+  margin-top:12px;
+}
+
+input[type="file"]{
+  width:100%;
+  font-size:13px;
+}
+
+/* DIVIDER */
+hr{
+  border:none;
+  border-top:1px solid var(--border);
+  margin:20px 0;
+}
+
+/* INFO TEXT */
+.small{
+  font-size:12px;
+  color:#666;
+  margin-top:6px;
+}
+</style>
+</head>
+<body>
+<header>
+   <h2>Backup & Restore</h2>
+  <button onclick="location.href='dashboard.html'">Dashboard</button>
+</header>
+
+  <div class="container">
+  <div class="card">
+
+    <h3>📦 Backup Data</h3>
+  
+    <button onclick="backupWA()">📤 Backup WhatsApp</button>
+<button onclick="restoreWA()">📥 Restore WhatsApp</button>
+    
+
+    
+
+
+<script src="js/storage.js"></script>
+<script src="js/backup.js"></script>
+</body>
+</html>
