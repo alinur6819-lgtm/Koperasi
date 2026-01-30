@@ -1,0 +1,58 @@
+
+  background:
+    linear-gradient(
+      rgba(0,0,0,.45),
+      rgba(0,0,0,.45)
+    ),
+    url("/koperasi/img/bg-login.jpg") center/cover no-repeat;
+}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  min-height:100vh;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
+    url("img/bg-login.jpg") center/cover no-repeat;
+}
+
+.login{
+  width:100%;
+  max-width:340px;
+  color:white;
+}
+
+.login h2{
+  text-align:center;
+  margin-bottom:25px;
+}
+
+.login input{
+  width:100%;
+  padding:12px;
+  margin-bottom:14px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,.15);
+  color:white;
+  outline:none;
+}
+
+.login input::placeholder{
+  color:#eee;
+}
+
+.login button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#1e90ff;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
